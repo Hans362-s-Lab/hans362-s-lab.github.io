@@ -5,8 +5,8 @@
             "handle": "filesystem"
         },
         {
-            "src": "/ssl/ct.json?(.*)",
-            "dest": "/ssl/ct.json"
+            "src": "/ssl",
+            "dest": "/ssl/"
         },
         {
             "src": "/(.*)",
