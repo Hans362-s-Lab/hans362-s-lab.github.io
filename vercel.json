@@ -6,7 +6,10 @@
         },
         {
             "src": "/ssl",
-            "dest": "/ssl/"
+            "status": 301, 
+            "headers": { 
+                "Location": "https://lab.hans362.cn/ssl/" 
+            } 
         },
         {
             "src": "/(.*)",
