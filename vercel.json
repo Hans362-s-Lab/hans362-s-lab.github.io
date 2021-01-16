@@ -1,16 +1,7 @@
 {
     "version": 2,
+    "trailingSlash": true,
     "routes": [
-        {
-            "handle": "filesystem"
-        },
-        {
-            "src": "/ssl",
-            "status": 301, 
-            "headers": { 
-                "Location": "https://lab.hans362.cn/ssl/" 
-            } 
-        },
         {
             "src": "/(.*)",
             "status": 404,
