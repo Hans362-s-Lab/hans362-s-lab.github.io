@@ -1,0 +1,17 @@
+{
+    "version": 2,
+    "routes": [
+        {
+            "handle": "filesystem"
+        },
+        {
+            "src": "/ssl/ct.json?(.*)",
+            "dest": "/ssl/ct.json"
+        },
+        {
+            "src": "/(.*)",
+            "status": 404,
+            "dest": "/404.html"
+        }
+    ]
+}
