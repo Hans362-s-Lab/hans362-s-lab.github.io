@@ -37,8 +37,12 @@
         var option = {
             tooltip: {
                 trigger: "axis",
-                position: function (pt) {
-                    return [pt[0], "10%"];
+                position: function (point, params, dom, rect, size) {
+                    if (point[0] <= size["viewSize"][0] * 0.5) {
+                        return [point[0], "10%"];
+                    } else {
+                        return [point[0] - size["contentSize"][0], "10%"];
+                    }
                 },
             },
             title: {
