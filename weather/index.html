@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 
 <head>
     <meta charset="utf-8" />
@@ -22,9 +22,18 @@
     <div class="container sk-pt-8">
         <h1 class="h3 text-center sk-mt-3">气象监测</h1>
     </div>
-    <div id="main" class="container sk-mt-8" style="width: 100%; height: 400px"></div>
+    <div class="container sk-mt-8">
+        <nav class="nav nav-pills nav-justified">
+            <a id="24h" class="nav-link active" href="#">最近24小时</a>
+            <a id="7d" class="nav-link" href="#">最近7天</a>
+            <a id="30d" class="nav-link" href="#">最近30天</a>
+            <a id="90d" class="nav-link" href="#">最近90天</a>
+            <a id="all" class="nav-link" href="#">所有时间</a>
+        </nav>
+    </div>
+    <div id="baro" class="container sk-mt-8" style="width: 100%; height: 400px"></div>
     <script type="text/javascript">
-        var myChart = echarts.init(document.getElementById("main"));
+        var baroChart = echarts.init(document.getElementById("baro"));
         var option = {
             tooltip: {
                 trigger: "axis",
@@ -68,37 +77,74 @@
                 },
             ],
         };
-        myChart.showLoading();
-        myChart.setOption(option);
-        $.get(
-            "https://firebase-mirror.vercel.app/baro.json?orderBy=%22timeStamp%22&startAt=0&endAt=" +
-            Math.round(Date.now() * 0.001)
-        ).done(function (baroData) {
-            var data = [];
-            $.each(baroData, function (index, baro) {
-                var timeStamp = baro["timeStamp"] * 1000;
-                var baroValue = baro["baroValue"];
-                data.push([timeStamp, baroValue]);
+        baroChart.showLoading();
+        baroChart.setOption(option);
+
+        function refresh_data(type, st, ed) {
+            var Chart = echarts.init(document.getElementById(type));
+            Chart.showLoading();
+            $.get(
+                "https://firebase-mirror.vercel.app/" +
+                type +
+                ".json?orderBy=%22timeStamp%22&startAt=" +
+                st +
+                "&endAt=" +
+                ed
+            ).done(function (rawData) {
+                var data = [];
+                $.each(rawData, function (index, single) {
+                    var timeStamp = single["timeStamp"] * 1000;
+                    var value = single[type + "Value"];
+                    data.push([timeStamp, value]);
+                });
+                data.sort(function (a, b) {
+                    return a[0] - b[0];
+                });
+                Chart.hideLoading();
+                Chart.setOption({
+                    series: [
+                        {
+                            data: data,
+                        },
+                    ],
+                });
             });
-            data.sort(function (a, b) {
-                return a[0] - b[0];
-            });
-            myChart.hideLoading();
-            myChart.setOption({
-                series: [
-                    {
-                        name: "气压（百帕）",
-                        type: "line",
-                        smooth: true,
-                        symbol: "none",
-                        areaStyle: {},
-                        data: data,
-                    },
-                ],
-            });
+        }
+
+        refresh_data('baro', Math.round(Date.now() * 0.001 - 24 * 3600), Math.round(Date.now() * 0.001));
+
+        $('#24h').on('click', function () {
+            $('.nav-link').removeClass('active');
+            $('#24h').addClass('active');
+            refresh_data('baro', Math.round(Date.now() * 0.001 - 24 * 3600), Math.round(Date.now() * 0.001));
         });
+
+        $('#7d').on('click', function () {
+            $('.nav-link').removeClass('active');
+            $('#7d').addClass('active');
+            refresh_data('baro', Math.round(Date.now() * 0.001 - 24 * 3600 * 7), Math.round(Date.now() * 0.001));
+        });
+
+        $('#30d').on('click', function () {
+            $('.nav-link').removeClass('active');
+            $('#30d').addClass('active');
+            refresh_data('baro', Math.round(Date.now() * 0.001 - 24 * 3600 * 30), Math.round(Date.now() * 0.001));
+        });
+
+        $('#90d').on('click', function () {
+            $('.nav-link').removeClass('active');
+            $('#90d').addClass('active');
+            refresh_data('baro', Math.round(Date.now() * 0.001 - 24 * 3600 * 90), Math.round(Date.now() * 0.001));
+        });
+
+        $('#all').on('click', function () {
+            $('.nav-link').removeClass('active');
+            $('#all').addClass('active');
+            refresh_data('baro', 0, Math.round(Date.now() * 0.001));
+        });
+
         $(window).on('resize', function () {
-            myChart.resize();
+            baroChart.resize();
         });
     </script>
     <p class="text-center">Data collected from Minhang, Shanghai</p>
