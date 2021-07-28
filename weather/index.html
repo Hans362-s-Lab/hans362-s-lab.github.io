@@ -24,17 +24,55 @@
     </div>
     <div class="container sk-mt-8">
         <nav class="nav nav-pills nav-justified">
-            <a id="24h" class="nav-link active" href="#">最近24小时</a>
-            <a id="7d" class="nav-link" href="#">最近7天</a>
-            <a id="30d" class="nav-link" href="#">最近30天</a>
-            <a id="90d" class="nav-link" href="#">最近90天</a>
+            <a id="24h" class="nav-link active" href="#">过去24小时</a>
+            <a id="7d" class="nav-link" href="#">过去7天</a>
+            <a id="30d" class="nav-link" href="#">过去30天</a>
+            <a id="90d" class="nav-link" href="#">过去90天</a>
+            <a id="1y" class="nav-link" href="#">过去1年</a>
             <a id="all" class="nav-link" href="#">所有时间</a>
         </nav>
     </div>
-    <div id="baro" class="container sk-mt-8" style="width: 100%; height: 400px"></div>
+    <div id="baro" class="container chart sk-mt-8" style="width: 100%; height: 400px"></div>
     <script type="text/javascript">
-        var baroChart = echarts.init(document.getElementById("baro"));
-        var option = {
+        function refreshData(type, st, ed) {
+            var chart = echarts.init(document.getElementById(type));
+            chart.showLoading();
+            $.get(
+                "https://firebase-mirror.vercel.app/" +
+                type +
+                ".json?orderBy=%22timeStamp%22&startAt=" +
+                st +
+                "&endAt=" +
+                ed
+            ).done(function (rawData) {
+                var data = [];
+                $.each(rawData, function (index, single) {
+                    var timeStamp = single["timeStamp"] * 1000;
+                    var value = single[type + "Value"];
+                    data.push([timeStamp, value]);
+                });
+                data.sort(function (a, b) {
+                    return a[0] - b[0];
+                });
+                chart.hideLoading();
+                chart.setOption({
+                    series: [
+                        {
+                            data: data,
+                        },
+                    ],
+                });
+            });
+        }
+
+        function initChart(type, option) {
+            var chart = echarts.init(document.getElementById(type));
+            chart.showLoading();
+            chart.setOption(option);
+            refreshData(type, Math.round(Date.now() * 0.001 - 24 * 3600), Math.round(Date.now() * 0.001));
+        }
+
+        var baroOption = {
             tooltip: {
                 trigger: "axis",
                 position: function (point, params, dom, rect, size) {
@@ -81,74 +119,62 @@
                 },
             ],
         };
-        baroChart.showLoading();
-        baroChart.setOption(option);
 
-        function refresh_data(type, st, ed) {
-            var Chart = echarts.init(document.getElementById(type));
-            Chart.showLoading();
-            $.get(
-                "https://firebase-mirror.vercel.app/" +
-                type +
-                ".json?orderBy=%22timeStamp%22&startAt=" +
-                st +
-                "&endAt=" +
-                ed
-            ).done(function (rawData) {
-                var data = [];
-                $.each(rawData, function (index, single) {
-                    var timeStamp = single["timeStamp"] * 1000;
-                    var value = single[type + "Value"];
-                    data.push([timeStamp, value]);
-                });
-                data.sort(function (a, b) {
-                    return a[0] - b[0];
-                });
-                Chart.hideLoading();
-                Chart.setOption({
-                    series: [
-                        {
-                            data: data,
-                        },
-                    ],
-                });
-            });
-        }
-
-        refresh_data('baro', Math.round(Date.now() * 0.001 - 24 * 3600), Math.round(Date.now() * 0.001));
+        initChart('baro', baroOption);
 
         $('#24h').on('click', function () {
             $('.nav-link').removeClass('active');
             $('#24h').addClass('active');
-            refresh_data('baro', Math.round(Date.now() * 0.001 - 24 * 3600), Math.round(Date.now() * 0.001));
+            $('.chart').each(function () {
+                refreshData($(this).attr('id'), Math.round(Date.now() * 0.001 - 24 * 3600), Math.round(Date.now() * 0.001));
+            });
         });
 
         $('#7d').on('click', function () {
             $('.nav-link').removeClass('active');
             $('#7d').addClass('active');
-            refresh_data('baro', Math.round(Date.now() * 0.001 - 24 * 3600 * 7), Math.round(Date.now() * 0.001));
+            $('.chart').each(function () {
+                refreshData($(this).attr('id'), Math.round(Date.now() * 0.001 - 24 * 3600 * 7), Math.round(Date.now() * 0.001));
+            });
         });
 
         $('#30d').on('click', function () {
             $('.nav-link').removeClass('active');
             $('#30d').addClass('active');
-            refresh_data('baro', Math.round(Date.now() * 0.001 - 24 * 3600 * 30), Math.round(Date.now() * 0.001));
+            $('.chart').each(function () {
+                refreshData($(this).attr('id'), Math.round(Date.now() * 0.001 - 24 * 3600 * 30), Math.round(Date.now() * 0.001));
+            });
         });
 
         $('#90d').on('click', function () {
             $('.nav-link').removeClass('active');
             $('#90d').addClass('active');
-            refresh_data('baro', Math.round(Date.now() * 0.001 - 24 * 3600 * 90), Math.round(Date.now() * 0.001));
+            $('.chart').each(function () {
+                refreshData($(this).attr('id'), Math.round(Date.now() * 0.001 - 24 * 3600 * 90), Math.round(Date.now() * 0.001));
+            });
+        });
+
+        $('#1y').on('click', function () {
+            $('.nav-link').removeClass('active');
+            $('#1y').addClass('active');
+            $('.chart').each(function () {
+                refreshData($(this).attr('id'), Math.round(Date.now() * 0.001 - 24 * 3600 * 365), Math.round(Date.now() * 0.001));
+            });
         });
 
         $('#all').on('click', function () {
             $('.nav-link').removeClass('active');
             $('#all').addClass('active');
-            refresh_data('baro', 0, Math.round(Date.now() * 0.001));
+            $('.chart').each(function () {
+                refreshData($(this).attr('id'), 0, Math.round(Date.now() * 0.001));
+            });
         });
 
         $(window).on('resize', function () {
-            baroChart.resize();
+            $('.chart').each(function () {
+                var chart = echarts.init(document.getElementById($(this).attr('id')));
+                chart.resize();
+            });
         });
     </script>
     <p class="text-center">Data collected from Minhang, Shanghai</p>
