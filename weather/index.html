@@ -22,7 +22,7 @@
     <div class="container-fluid sk-pt-8">
         <h1 class="h3 text-center sk-mt-3">气象监测</h1>
     </div>
-    <div class="container-fluid sk-mt-8">
+    <div class="container sk-mt-8">
         <nav class="nav nav-pills nav-justified">
             <a id="24h" class="nav-link active" href="#">过去24小时</a>
             <a id="7d" class="nav-link" href="#">过去7天</a>
@@ -30,7 +30,27 @@
             <a id="90d" class="nav-link" href="#">过去90天</a>
             <a id="1y" class="nav-link" href="#">过去1年</a>
             <a id="all" class="nav-link" href="#">所有时间</a>
+            <a id="custom" class="nav-link" href="#">自定义时间</a>
         </nav>
+    </div>
+    <div class="container sk-mt-4 sk-hidden" id="date">
+        <div class="card">
+            <div class="card-header">
+                自定义时间范围
+            </div>
+            <div class="card-body">
+                <form>
+                    <div class="input-group mb-3">
+                        <input type="datetime-local" id="dateFrom" class="form-control" value="">
+                        <div class="input-group-append input-group-prepend">
+                            <div class="input-group-text">至</div>
+                        </div>
+                        <input type="datetime-local" id="dateTo" class="form-control" value="">
+                    </div>
+                    <button type="button" id="dateSubmit" class="btn btn-primary sk-fr">确定</button>
+                </form>
+            </div>
+        </div>
     </div>
     <div id="baro" class="container-fluid chart sk-mt-8" style="width: 100%; height: 400px"></div>
     <script type="text/javascript">
@@ -125,6 +145,7 @@
         $('#24h').on('click', function () {
             $('.nav-link').removeClass('active');
             $('#24h').addClass('active');
+            $('#date').addClass('sk-hidden');
             $('.chart').each(function () {
                 refreshData($(this).attr('id'), Math.round(Date.now() * 0.001 - 24 * 3600), Math.round(Date.now() * 0.001));
             });
@@ -133,6 +154,7 @@
         $('#7d').on('click', function () {
             $('.nav-link').removeClass('active');
             $('#7d').addClass('active');
+            $('#date').addClass('sk-hidden');
             $('.chart').each(function () {
                 refreshData($(this).attr('id'), Math.round(Date.now() * 0.001 - 24 * 3600 * 7), Math.round(Date.now() * 0.001));
             });
@@ -141,6 +163,7 @@
         $('#30d').on('click', function () {
             $('.nav-link').removeClass('active');
             $('#30d').addClass('active');
+            $('#date').addClass('sk-hidden');
             $('.chart').each(function () {
                 refreshData($(this).attr('id'), Math.round(Date.now() * 0.001 - 24 * 3600 * 30), Math.round(Date.now() * 0.001));
             });
@@ -149,6 +172,7 @@
         $('#90d').on('click', function () {
             $('.nav-link').removeClass('active');
             $('#90d').addClass('active');
+            $('#date').addClass('sk-hidden');
             $('.chart').each(function () {
                 refreshData($(this).attr('id'), Math.round(Date.now() * 0.001 - 24 * 3600 * 90), Math.round(Date.now() * 0.001));
             });
@@ -157,6 +181,7 @@
         $('#1y').on('click', function () {
             $('.nav-link').removeClass('active');
             $('#1y').addClass('active');
+            $('#date').addClass('sk-hidden');
             $('.chart').each(function () {
                 refreshData($(this).attr('id'), Math.round(Date.now() * 0.001 - 24 * 3600 * 365), Math.round(Date.now() * 0.001));
             });
@@ -165,9 +190,37 @@
         $('#all').on('click', function () {
             $('.nav-link').removeClass('active');
             $('#all').addClass('active');
+            $('#date').addClass('sk-hidden');
             $('.chart').each(function () {
                 refreshData($(this).attr('id'), 0, Math.round(Date.now() * 0.001));
             });
+        });
+        
+        $('#custom').on('click', function () {
+            $('.nav-link').removeClass('active');
+            $('#custom').addClass('active');
+            $('#date').removeClass('sk-hidden');
+            var from = new Date(Date.now() - 24 * 3600 * 1000 - new Date().getTimezoneOffset() * 60 * 1000).toISOString();
+            var to = new Date(Date.now() - new Date().getTimezoneOffset() * 60 * 1000).toISOString();
+            $('#dateFrom').val(from.split('.')[0]);
+            $('#dateTo').val(to.split('.')[0]);
+            $('.chart').each(function () {
+                var chart = echarts.init(document.getElementById($(this).attr('id')));
+                chart.showLoading();
+            });
+        });
+
+        $('#dateSubmit').on('click', function () {
+            var from = new Date($('#dateFrom').val()).getTime();
+            var to = new Date($('#dateTo').val()).getTime();
+            if (from >= 0 && to > from) {
+                $('.chart').each(function () {
+                    refreshData($(this).attr('id'), Math.round(from * 0.001), Math.round(to * 0.001));
+                });
+                $('#date').addClass('sk-hidden');
+            } else {
+                alert('请检查时间范围');
+            }
         });
 
         $(window).on('resize', function () {
